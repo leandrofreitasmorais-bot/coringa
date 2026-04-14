@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Ativador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background:#0f172a; color:#e2e8f0; font-family:'Segoe UI',sans-serif; margin:0; }
+    .bg-card   { background:#1e293b; }
+    .bg-dark   { background:#334155; }
+    .bg-darker { background:#0f172a; }
+    .border-dark { border-color:#334155; }
+    .text-light  { color:#f1f5f9; }
+    .text-muted  { color:#94a3b8; }
+    .sidebar { background:#1e293b; width:260px; min-height:100vh; flex-shrink:0; transition:transform .3s; }
+    .sidebar-item { color:#cbd5e1; transition:background .2s; }
+    .sidebar-item.active, .sidebar-item:hover { background:#334155; color:#fff; }
+    .search-input { background:#1e293b; border:1px solid #334155; color:#f1f5f9; }
+    .search-input:focus { outline:none; border-color:#3b82f6; }
+    .action-btn { display:inline-flex;align-items:center;justify-content:center;padding:6px;border-radius:6px;cursor:pointer;transition:background .15s; }
+    .action-btn-blue:hover   { background:#1e3a5f; }
+    .action-btn-green:hover  { background:#14532d; }
+    .action-btn-red:hover    { background:#7f1d1d; }
+    .action-btn-orange:hover { background:#7c2d12; }
+    .action-btn-yellow:hover { background:#713f12; }
+    .action-btn-purple:hover { background:#3b0764; }
+    #loading-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;align-items:center;justify-content:center; }
+    #loading-overlay.active { display:flex; }
+    #modal-container { display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;align-items:center;justify-content:center;padding:1rem; }
+    #modal-container.active { display:flex; }
+    #toast { position:fixed;bottom:1.5rem;right:1.5rem;background:#1e293b;color:#f1f5f9;padding:.75rem 1.25rem;border-radius:.75rem;border:1px solid #334155;z-index:10000;transition:opacity .4s,transform .4s;box-shadow:0 4px 20px rgba(0,0,0,.4);opacity:0;transform:translateY(10px);pointer-events:none; }
+    .codes-table-container { max-height:520px; overflow-y:auto; }
+    .selected-count-badge  { background:#1d4ed8;color:#fff;padding:2px 10px;border-radius:999px;font-size:.8rem;font-weight:600; }
+    .touch-btn { min-height:36px; }
+    @media(max-width:768px){ .sidebar { position:fixed;left:0;top:0;z-index:100;transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } #mobile-overlay { position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99; } }
+  </style>
+</head>
+<body class="min-h-screen">
+<div id="loading-overlay">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <div style="width:40px;height:40px;border:4px solid #3b82f6;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;"></div>
+    <span style="color:#f1f5f9;font-size:.875rem;">Carregando...</span>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<div id="toast"></div>
+<div id="modal-container"><div id="modal-inner"></div></div>
+<div id="login-container" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div class="bg-card" style="border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,.5);width:100%;max-width:380px;padding:2rem;border:1px solid #334155;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;background:#2563eb;border-radius:1rem;margin-bottom:1rem;">
+        <i data-lucide="tv-2" style="width:32px;height:32px;color:#fff;"></i>
+      </div>
+      <h1 style="font-size:1.5rem;font-weight:700;color:#f1f5f9;margin:0;">Meu Ativador</h1>
+      <p style="color:#94a3b8;font-size:.875rem;margin:.25rem 0 0;">Painel de Gerenciamento</p>
+    </div>
+    <form id="login-form">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:.875rem;font-weight:500;color:#f1f5f9;margin-bottom:.375rem;">Usuário</label>
+        <input name="username" type="text" required autocomplete="username"
+          style="width:100%;padding:.75rem 1rem;background:#334155;border:1px solid #475569;border-radius:.75rem;color:#f1f5f9;font-size:1rem;outline:none;"
+          onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'" />
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:.875rem;font-weight:500;color:#f1f5f9;margin-bottom:.375rem;">Senha</label>
+        <input name="password" type="password" required autocomplete="current-password"
+          style="width:100%;padding:.75rem 1rem;background:#334155;border:1px solid #475569;border-radius:.75rem;color:#f1f5f9;font-size:1rem;outline:none;"
+          onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#475569'" />
+      </div>
+      <p id="login-error" style="color:#f87171;font-size:.875rem;margin-bottom:.75rem;display:none;"></p>
+      <button type="submit" id="login-btn"
+        style="width:100%;padding:.875rem;background:#2563eb;color:#fff;font-weight:600;font-size:1rem;border:none;border-radius:.75rem;cursor:pointer;transition:background .2s;"
+        onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+        Entrar
+      </button>
+    </form>
+    <p style="text-align:center;font-size:.75rem;color:#64748b;margin-top:1.5rem;">Desenvolvido por Meu Ativador</p>
+  </div>
+</div>
+<div id="panel-container" style="display:none;min-height:100vh;">
+  <div class="md:hidden" style="display:none;align-items:center;justify-content:space-between;background:#1e293b;padding:.75rem 1rem;border-bottom:1px solid #334155;position:sticky;top:0;z-index:50;" id="mobile-topbar">
+    <button id="mobile-menu-btn" style="color:#f1f5f9;background:none;border:none;cursor:pointer;padding:4px;">
+      <i data-lucide="menu" style="width:24px;height:24px;"></i>
+    </button>
+    <span style="font-weight:700;color:#f1f5f9;">Meu Ativador</span>
+    <div id="codes-count-mobile" class="selected-count-badge">0</div>
+  </div>
+  <div style="display:flex;">
+    <aside class="sidebar" style="display:flex;flex-direction:column;">
+      <div style="padding:1.25rem;border-bottom:1px solid #334155;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <div style="width:40px;height:40px;background:#2563eb;border-radius:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="tv-2" style="width:20px;height:20px;color:#fff;"></i>
+          </div>
+          <div>
+            <p style="font-weight:700;color:#f1f5f9;font-size:.875rem;margin:0;">Meu Ativador</p>
+            <p style="font-size:.75rem;color:#94a3b8;margin:0;">Painel</p>
+          </div>
+        </div>
+      </div>
+      <div style="padding:.75rem;border-bottom:1px solid #334155;">
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem;">
+          <i data-lucide="user-circle" style="width:20px;height:20px;color:#60a5fa;flex-shrink:0;"></i>
+          <span id="username-display" style="font-size:.875rem;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem;margin-top:.25rem;">
+          <i data-lucide="key-round" style="width:16px;height:16px;color:#fb923c;flex-shrink:0;"></i>
+          <span style="font-size:.75rem;color:#94a3b8;">Ativos: <span id="codes-count-value" style="color:#fb923c;font-weight:700;">0</span></span>
+        </div>
+      </div>
+      <nav id="sidebar-nav" style="flex:1;padding:.75rem;overflow-y:auto;"></nav>
+      <div style="padding:.75rem;border-top:1px solid #334155;">
+        <button id="logout-btn" style="width:100%;display:flex;align-items:center;padding:.5rem 1rem;border-radius:.5rem;color:#f87171;background:none;border:none;cursor:pointer;font-size:.875rem;transition:background .2s;"
+          onmouseover="this.style.background='rgba(127,29,29,.3)'" onmouseout="this.style.background='none'">
+          <i data-lucide="log-out" style="width:20px;height:20px;margin-right:.75rem;"></i> Sair
+        </button>
+      </div>
+    </aside>
+    <div id="mobile-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;"></div>
+    <main id="main-content" style="flex:1;padding:2rem;overflow-x:hidden;min-height:100vh;"></main>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

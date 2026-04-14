@@ -1,0 +1,15 @@
+{
+  "users": {
+    "admin": {
+      "password": "INIT",
+      "role": "superadmin",
+      "name": "Administrador",
+      "created_at": "2026-01-01T00:00:00+00:00"
+    }
+  },
+  "codes": {},
+  "settings": {
+    "site_name": "Meu Ativador"
+  },
+  "logins": []
+}
