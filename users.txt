@@ -1,0 +1,3 @@
+Leandro:senha123
+cliente2:senha456
+cliente3:senha789
