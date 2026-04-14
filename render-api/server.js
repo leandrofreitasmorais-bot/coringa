@@ -1,10 +1,12 @@
-const express = require('express');
-const bcrypt  = require('bcryptjs');
-const session = require('express-session');
-const cors    = require('cors');
-const fs      = require('fs');
-const path    = require('path');
-const crypto  = require('crypto');
+const express   = require('express');
+const bcrypt    = require('bcryptjs');
+const session   = require('express-session');
+const cors      = require('cors');
+const fs        = require('fs');
+const path      = require('path');
+const crypto    = require('crypto');
+const multer    = require('multer');
+const upload    = multer();
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -85,7 +87,7 @@ function generateConfigContent() {
 }
 
 // ── router ────────────────────────────────────────────────────────────────────
-app.post('/api.php', async (req, res) => {
+app.post('/api.php', upload.none(), async (req, res) => {
   const action = req.body.action || req.query.action || '';
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
