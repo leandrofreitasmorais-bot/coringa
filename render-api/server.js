@@ -421,21 +421,30 @@ app.get('/api.php', async (req, res) => {
   res.redirect('/');
 });
 
-// ── GET /api-config — retorna URL de uma config disponível (usado pelo APK) ──
+// ── GET /api-config — busca config do servidor do Lucas e repassa ao APK ─────
 app.get('/api-config', async (req, res) => {
-  const db = await loadDB();
-  for (const [id, code] of Object.entries(db.codes || {})) {
-    if (code.status === 'available' && code.content) {
-      db.codes[id].status       = 'active';
-      db.codes[id].activated_at = new Date().toISOString();
-      await saveDB(db);
-      return res.json({
-        url: `https://coringa.onrender.com/config/${id}`,
-        filename: `${id}.config`
+  try {
+    const https = require('https');
+    const options = {
+      hostname: 'ftzxkevtyjipibozansl.supabase.co',
+      path: '/functions/v1/api-config',
+      method: 'GET',
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    };
+    const result = await new Promise((resolve, reject) => {
+      const r = https.request(options, resp => {
+        let data = '';
+        resp.on('data', chunk => data += chunk);
+        resp.on('end', () => resolve({ status: resp.statusCode, body: data }));
       });
-    }
+      r.on('error', reject);
+      r.end();
+    });
+    if (result.status !== 200) return res.status(result.status).json({ error: 'Config indisponível' });
+    return res.json(JSON.parse(result.body));
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
-  res.status(404).json({ error: 'Nenhuma configuração disponível' });
 });
 
 // ── GET /config/:id — serve o conteúdo do .config diretamente ────────────────
