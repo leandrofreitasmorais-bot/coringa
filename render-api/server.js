@@ -327,6 +327,8 @@ app.post('/api.php', upload.none(), async (req, res) => {
       const user = req.body.user?.trim();
       const pass = req.body.pass?.trim();
       if (!user || !pass) return resp(false, {}, 'Dados inválidos');
+      // força leitura fresca do JSONBin para validação
+      dbCache = null;
       const db = await loadDB();
       if (!db.logins) db.logins = [];
       const idx = db.logins.findIndex(l => l.user === user && l.pass === pass);
@@ -401,8 +403,6 @@ app.post('/api.php', upload.none(), async (req, res) => {
       }
       return resp(false, {}, 'Nenhuma configuração disponível');
     }
-
-    default:
       return resp(false, {}, 'Ação desconhecida');
   }
 });
@@ -419,6 +419,34 @@ app.get('/api.php', async (req, res) => {
     return res.send(code.content);
   }
   res.redirect('/');
+});
+
+// ── GET /api-config — retorna URL de uma config disponível (usado pelo APK) ──
+app.get('/api-config', async (req, res) => {
+  const db = await loadDB();
+  for (const [id, code] of Object.entries(db.codes || {})) {
+    if (code.status === 'available' && code.content) {
+      db.codes[id].status       = 'active';
+      db.codes[id].activated_at = new Date().toISOString();
+      await saveDB(db);
+      return res.json({
+        url: `https://coringa.onrender.com/config/${id}`,
+        filename: `${id}.config`
+      });
+    }
+  }
+  res.status(404).json({ error: 'Nenhuma configuração disponível' });
+});
+
+// ── GET /config/:id — serve o conteúdo do .config diretamente ────────────────
+app.get('/config/:id', async (req, res) => {
+  const db     = await loadDB();
+  const codeId = req.params.id.toUpperCase().replace('.config','');
+  const code   = db.codes?.[codeId];
+  if (!code || !code.content) return res.status(404).send('Not found');
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', `attachment; filename="${codeId}.config"`);
+  res.send(code.content);
 });
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
